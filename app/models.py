@@ -18,7 +18,7 @@ class User(db.Model):
     posts = db.relationship('Post', backref='user', lazy=True, cascade='all, delete')
 
     def __repr__(self) -> str:
-        return f"<User {self.name}"
+        return f"<User {self.name}>"
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
@@ -31,7 +31,7 @@ class User(db.Model):
         return s.dumps({ 'id': self.id })
 
     @staticmethod
-    def verify_auth_token(token):
+    def verify_auth_token(token) -> object:
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
             data = s.loads(token)
@@ -41,6 +41,8 @@ class User(db.Model):
             return None
         user = User.query.get(data['id'])
         return user
+
+
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(128))
@@ -50,4 +52,4 @@ class Post(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
     def __repr__(self) -> str:
-        return f"<Post {self.title}"
+        return f"<Post {self.title}>"

@@ -1,30 +1,58 @@
 from flask import (
-    Blueprint, g, redirect, request, url_for, abort, jsonify
+    Blueprint, g, request, jsonify
 )
-from werkzeug.security import check_password_hash, generate_password_hash
-from . import db
-from .models import User
-from flask_restful import Api, Resource
-from flask_httpauth import HTTPBasicAuth
+from app import db
+from app.models import User
+from app.common import token_required
 
-import functools
+auth_bp = Blueprint('auth', __name__, url_prefix='/v1/auth')
 
-bp = Blueprint('auth', __name__, url_prefix='/v1/auth')
-
-@bp.route('/register')
+@auth_bp.route('/register', methods=['POST'])
 def register():
-    username = request.json.get('username')
+    name = request.json.get('name')
     password = request.json.get('password')
+    email = request.json.get('email')
 
-    if not username or not password:
-        abort(400)
-    if User.query.filter_by(username = username).first() is not None:
-        abort(400)
+    if not name or not password or not email:
+        return jsonify({
+            'error': 400,
+            'message': 'User is lacking email, name or password!' 
+        }), 400
+    if User.query.filter_by(name = name).first() or User.query.filter_by(email = email).first():
+        return jsonify({
+            'error': 400,
+            'message': 'User already exists!' 
+        }), 400
 
-    user = User(username = username)
+    user = User(name = name, email = email)
     user.set_password(password)
     db.session.add(user)
     db.session.commit()
-    return jsonify({ 'username': username }), 201, {'Location': url_for('get_user', id = user.id, _external = True)}
+    return jsonify({ 'name': name }), 201
 
 
+@auth_bp.route('/login', methods=['POST'])
+def login():
+    name = request.json.get('name')
+    password = request.json.get('password')
+    user = verify_password(name, password)
+    if not user:
+        return jsonify({ 'message': 'Invalid Login Information'}), 404
+    g.user = user
+    token = g.user.generate_auth_token()
+    return jsonify({ 'message': 'success', 'token': token.decode('utf-8') })
+
+
+def verify_password(name, password):
+    user = User.query.filter_by(name = name).first()
+    if user and user.check_password(password):
+        return user
+    return None
+
+
+@auth_bp.route('/test', methods=['GET'])
+@token_required
+def test():
+    return jsonify({
+        'message': 'Hello World'
+    })
