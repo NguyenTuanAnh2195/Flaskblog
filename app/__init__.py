@@ -36,9 +36,11 @@ def create_app(test_config: object = None) -> object:
     from app.models import User, Post
     from app.auth import auth_bp
     from app.posts import post_bp
+    from app.users import user_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(post_bp)
+    app.register_blueprint(user_bp)
 
     register_extensions(app, db)
     

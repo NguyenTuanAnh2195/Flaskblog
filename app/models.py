@@ -1,5 +1,7 @@
 from sqlalchemy.sql import func
 from flask import current_app
+from marshmallow import Schema, fields
+
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import (TimedJSONWebSignatureSerializer
                            as Serializer, BadSignature, SignatureExpired)
@@ -53,3 +55,18 @@ class Post(db.Model):
 
     def __repr__(self) -> str:
         return f"<Post {self.title}>"
+
+
+
+class UserSchema(Schema):
+    id = fields.Str()
+    name = fields.Str()
+    email = fields.Str()
+    created_at = fields.DateTime()
+
+
+class PostSchema(Schema):
+    id = fields.Integer()
+    title = fields.Str()
+    content = fields.Str()
+    user = fields.Nested(UserSchema)

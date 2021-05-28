@@ -1,10 +1,10 @@
 from flask import (
-    Blueprint, g, request, jsonify, current_app
+    Blueprint, request, jsonify, current_app
 )
-from flask_restful import Api, Resource
+from flask_restful import Resource
 
 from app import db, api
-from app.models import Post, User
+from app.models import Post, User, PostSchema
 from app.common import token_required
 
 
@@ -12,8 +12,10 @@ post_bp = Blueprint('posts', __name__)
 
 
 class PostAPI(Resource):
-    def show(self, id):
+    def get(self, id):
+        post_schema = PostSchema()
         post = Post.query.get(id)
+        post = post_schema.dump(post)
         return { 'post': post }
 
     @token_required
@@ -43,10 +45,12 @@ class PostAPI(Resource):
 
 class PostListAPI(Resource):
     def get(self):
+        posts_schema = PostSchema(many=True)
         page = request.args.get('page', 1, type=int)
         posts = Post.query.order_by(Post.created_at.desc()).paginate(
             page, current_app.config['POSTS_PER_PAGE'], False
         ).items
+        posts = posts_schema.dump(posts)
         return jsonify({ 'post': posts })
 
 
