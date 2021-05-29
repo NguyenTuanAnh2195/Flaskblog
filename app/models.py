@@ -89,4 +89,3 @@ class Like(db.Model):
         db.DateTime(timezone=True),
         server_default=func.now()
     )
-

@@ -10,11 +10,12 @@ from app.schemas import PostSchema, UserSchema
 
 user_bp = Blueprint('users', __name__)
 
+
 class UserAPI(Resource):
     def get(self, id):
         user_schema = UserSchema()
         post_schema = PostSchema(many=True)
-        
+
         user = User.query.get(id)
         posts = user.posts
 
@@ -22,11 +23,12 @@ class UserAPI(Resource):
         posts = post_schema.dump(posts)
 
         if not user:
-            return { 'message': 'User not found' }, 404
-        
+            return {'message': 'User not found'}, 404
+
         return {
             'user': user,
             'posts': posts
         }
 
-api.add_resource(UserAPI, '/v1/users/<int:id>', endpoint = 'user')
+
+api.add_resource(UserAPI, '/v1/users/<int:id>', endpoint='user')
