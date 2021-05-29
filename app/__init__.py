@@ -1,4 +1,4 @@
-from flask import Flask, app
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_restful import Api
@@ -14,7 +14,7 @@ migrate = Migrate()
 api = Api()
 
 
-def register_extensions(app, db = None):
+def register_extensions(app, db=None):
     db.init_app(app)
     migrate.init_app(app, db)
     api.init_app(app)
@@ -32,8 +32,8 @@ def create_app(test_config: object = None) -> object:
         os.makedirs(app.instance_path)
     except OSError:
         pass
-    
-    from app.models import User, Post
+
+    from app.models import User, Post, Like
     from app.auth import auth_bp
     from app.posts import post_bp
     from app.users import user_bp
@@ -43,12 +43,13 @@ def create_app(test_config: object = None) -> object:
     app.register_blueprint(user_bp)
 
     register_extensions(app, db)
-    
+
     @app.shell_context_processor
     def make_shell_context():
         return {
             'db': db,
             'User': User,
-            'Post': Post
+            'Post': Post,
+            'Like': Like
         }
     return app

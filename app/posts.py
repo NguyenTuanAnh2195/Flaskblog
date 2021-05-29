@@ -4,7 +4,8 @@ from flask import (
 from flask_restful import Resource
 
 from app import db, api
-from app.models import Post, User, PostSchema
+from app.models import Post, User, Like
+from app.schemas import PostSchema, LikeSchema
 from app.common import token_required
 
 
@@ -35,12 +36,12 @@ class PostAPI(Resource):
         token = request.headers.get('X-API-KEY')
         user = User.verify_auth_token(token)
         if post.user_id != user.id:
-            return { 'message': 'Unauthorized'}, 401
+            return { 'message': 'Unauthorized' }, 401
         if not post:
-            return { 'message': 'Post does not exist'}, 404
+            return { 'message': 'Post does not exist' }, 404
         db.session.delete(post)
         db.session.commit()
-        return { 'message': 'Delete Successul'}, 204
+        return { 'message': 'Delete Successul' }, 204
 
 
 class PostListAPI(Resource):
@@ -52,6 +53,57 @@ class PostListAPI(Resource):
         ).items
         posts = posts_schema.dump(posts)
         return jsonify({ 'post': posts })
+
+
+@token_required
+@post_bp.route('/v1/posts/like/<int:id>', methods=['POST'])
+def like(id):
+    post = Post.query.get(id)
+    token = request.headers.get('X-API-KEY')
+    user = User.verify_auth_token(token)
+    if not post:
+        return { 'message': 'Post does not exist' }, 404
+    like = Like.query.filter_by(post = post, user = user).first()
+
+    # Unlike
+    if like:
+        db.session.delete(like)
+        db.session.commit()
+        return { 'message': 'Unliked Post!' }
+
+    # Add Like
+    like = Like(post = post, user = user)
+    db.session.add(like)
+    db.session.commit()
+    return { 'message': 'Liked Post!' }
+
+
+@post_bp.route('/v1/posts/lazylike/<int:id>', methods=['POST'])
+def see_lazy_likes(id):
+    post = Post.query.get(id)
+    like_schema = LikeSchema(many=True)
+    if not post:
+        return { 'message': 'Post does not exist' }, 404
+    count = Like.query.filter_by(post = post).count()
+    lazy_count = count
+    if count > 3:
+        lazy_count -= 2
+        likes = Like.query.filter_by(post = post).limit(3).all()
+    else:
+        likes = post.likes
+    likes = like_schema.dump(likes)
+    return { 'like_count': count, 'likers': likes, 'lazy_count': lazy_count }
+
+
+@post_bp.route('/v1/posts/likes/<int:id>', methods=['POST'])
+def see_all_likes(id):
+    post = Post.query.get(id)
+    like_schema = LikeSchema(many=True)
+    if not post:
+        return { 'message': 'Post does not exist' }, 404
+    likes = post.likes
+    likes = like_schema.dump(likes)
+    return { 'likes': likes }
 
 
 api.add_resource(PostAPI, '/v1/posts/<int:id>', endpoint = 'post')

@@ -4,7 +4,8 @@ from flask import (
 from flask_restful import Resource
 
 from app import api
-from app.models import User, PostSchema, UserSchema
+from app.models import User
+from app.schemas import PostSchema, UserSchema
 
 
 user_bp = Blueprint('users', __name__)
