@@ -89,3 +89,6 @@ class Like(db.Model):
         db.DateTime(timezone=True),
         server_default=func.now()
     )
+
+    def __repr__(self):
+        return f"{self.user.name}"

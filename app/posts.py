@@ -86,13 +86,23 @@ def see_lazy_likes(id):
         return {'message': 'Post does not exist'}, 404
     count = Like.query.filter_by(post=post).count()
     lazy_count = count
+    message = ''
     if count > 3:
         lazy_count -= 2
-        likes = Like.query.filter_by(post=post).limit(3).all()
+        likes = Like.query.filter_by(post=post).limit(2).all()
+        names = [like.user.name for like in likes]
+        message = f"{', '.join(names)} and" + \
+                  f" {count - lazy_count} other people liked this"
     else:
         likes = post.likes
+
     likes = like_schema.dump(likes)
-    return {'like_count': count, 'likers': likes, 'lazy_count': lazy_count}
+    return {
+        'like_count': count,
+        'likers': likes,
+        'lazy_count': lazy_count,
+        'message': message
+    }
 
 
 @post_bp.route('/v1/posts/likes/<int:id>', methods=['POST'])

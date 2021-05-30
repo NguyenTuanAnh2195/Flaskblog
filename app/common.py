@@ -8,7 +8,8 @@ def token_required(f):
     @wraps(f)
     def decorator_function(*args, **kwargs):
         token = request.headers.get('X-API-KEY')
-        if not token or not User.verify_auth_token(token):
+        user = User.verify_auth_token(token)
+        if not token or not user:
             return jsonify({
                 'message': 'Invalid Token'
             }), 401

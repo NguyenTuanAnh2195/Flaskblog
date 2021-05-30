@@ -19,7 +19,8 @@ def register():
             'error': 400,
             'message': 'User is lacking email, name or password!'
         }), 400
-    if User.query.filter_by(name=name).first() or User.query.filter_by(email=email).first():
+    if User.query.filter_by(name=name).first() or \
+            User.query.filter_by(email=email).first():
         return jsonify({
             'error': 400,
             'message': 'User already exists!'
